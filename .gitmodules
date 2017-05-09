@@ -1,0 +1,3 @@
+[submodule "py-ioticbulkdata"]
+	path = py-ioticbulkdata
+	url = https://github.com/Iotic-Labs/py-IoticBulkData.git

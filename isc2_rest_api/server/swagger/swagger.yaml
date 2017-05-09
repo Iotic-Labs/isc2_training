@@ -1,0 +1,89 @@
+---
+swagger: "2.0"
+info:
+  description: "Simple API to test Gateway"
+  version: "0.0.1"
+  title: "Gateway REST API"
+host: "localhost:8182"
+paths:
+  /list:
+    get:
+      tags:
+      - "default_controller"
+      summary: "List all HVAC simulators"
+      description: "Gets a list of HVAC simulators"
+      operationId: "controllers.default_controller.list_hvac"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Array HVAC simulators"
+          schema:
+            type: "array"
+            title: "ArrayOfHVACSimulators"
+            items:
+              $ref: "#/definitions/HVAC"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+  /reading/{id}:
+    get:
+      tags:
+      - "default_controller"
+      summary: "Current reading"
+      description: "Gets the latest readings from the HVAC simulator"
+      operationId: "controllers.default_controller.hvac_reading_get"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of HVAC to get reading"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "Successful response"
+          schema:
+            $ref: "#/definitions/Reading"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+definitions:
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+      fields:
+        type: "string"
+  HVAC:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Unique identifier representing a specific device."
+      name:
+        type: "string"
+        description: "Name of sensor."
+  Reading:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Unique identifier representing a specific device."
+      temp:
+        type: "integer"
+        format: "int32"
+        description: "Current temperature"
+      power_consumption:
+        type: "integer"
+        format: "int32"
+        description: "Power consumption in Watts"

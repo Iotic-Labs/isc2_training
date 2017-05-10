@@ -36,7 +36,7 @@ class DemoThing(ThingRunner):
     thing_label = 'DemoThing instance'
     thing_description = 'Example thing only!'
     # Set to None to not have location set
-    thing_location = (51.4826, -0.0077)
+    thing_location = None
     thing_tags = ['DemoThing', 'specialDemoTag']
     thing_public = False
 

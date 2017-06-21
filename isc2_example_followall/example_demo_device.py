@@ -17,7 +17,7 @@ logging.basicConfig(format='%(asctime)s,%(msecs)03d %(levelname)s [%(name)s] {%(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-from IoticAgent import ThingRunner, Datatypes
+from IoticAgent import ThingRunner, Datatypes, Units
 from IoticAgent.IOT.RemotePoint import RemoteFeed
 from IoticAgent.IOT.Exceptions import IOTUnknown
 
@@ -51,7 +51,7 @@ class DemoThing(ThingRunner):
             meta.set_label(self.thing_label)
             meta.set_description(self.thing_description)
             if self.thing_location:
-                meta.set_location(*self.thing_location)
+                meta.set_location(*self.thing_location)  # pylint: disable=not-an-iterable
             else:
                 meta.delete_location()
 
@@ -105,6 +105,33 @@ class DemoThing(ThingRunner):
 
     @staticmethod
     def __public_feed_callback_parsed(args):
+        hvac_id = -1
+        for value in args[KEY_PARSED].filter_by(text=["HVAC", "hvac", "Id", "number"]):
+            logger.debug('HVAC text found in value %s', value.label)
+            hvac_id = value.value
+            break
+        if hvac_id == -1:
+            logger.debug('HVAC id not found, ignoring')
+
+        temp = None
+        for value in args[KEY_PARSED].filter_by(units=[Units.CELSIUS]):
+            logger.debug('Temperature found in value %s', value.label)
+            temp = value.value
+            break
+        if temp is None:
+            logger.debug('Temperature not found, ignoring')
+
+        power = None
+        for value in args[KEY_PARSED].filter_by(units=[Units.WATT]):
+            logger.debug('Power found in value %s', value.label)
+            power = value.value
+            break
+        if power is None:
+            logger.debug('Power not found, ignoring')
+
+        if temp is not None and power is not None:
+            logger.info('HVAC %.d: Temperature: %.d C, Power: %.d', hvac_id, temp, power)
+
         # Find a number in the feed data
         number = None
         for value in args[KEY_PARSED].filter_by(types=[Datatypes.INTEGER, Datatypes.DOUBLE]):
@@ -112,10 +139,9 @@ class DemoThing(ThingRunner):
             number = value.value
             break
         if number is None:
-            logger.warning('Number not found, ignoring')
-            return
-
-        logger.info('Number: %d', number)
+            logger.debug('Number not found, ignoring')
+        else:
+            logger.info('Number found in remote feed: %d', number)
 
 
 def in_background(runner):

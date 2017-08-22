@@ -1,4 +1,3 @@
-# /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -13,9 +12,10 @@ from __future__ import unicode_literals, print_function
 from time import sleep
 import logging
 logging.basicConfig(format='%(asctime)s,%(msecs)03d %(levelname)s [%(name)s] {%(threadName)s} %(message)s',
-                    level=logging.WARNING)
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logging.getLogger('IoticAgent.Core.Client').setLevel(logging.WARNING)
+logging.getLogger('IoticAgent.IOT').setLevel(logging.WARNING)
 
 from IoticAgent import ThingRunner, Datatypes, Units
 from IoticAgent.IOT.RemotePoint import RemoteFeed
@@ -77,11 +77,12 @@ class DemoThing(ThingRunner):
         if isinstance(arg, RemoteFeed):
             logger.info("example_demo_device: Subscribed to a new remote Feed")
             rm_feed_info = self.client.describe(arg)
-            if rm_feed_info is None:  # Not a public feed
+            logger.debug("remote describe %s", rm_feed_info)
+            if not rm_feed_info['meta']['values']:  # Not a public feed or feed has no values
                 logger.info("example_demo_device: Following known Feed")
                 self.__thing.follow(arg.guid, callback=self.__known_feed_callback)
             else:
-                logger.info("example_demo_device: Following public Feed")
+                logger.info("example_demo_device: Following public or owned Feed")
                 self.__thing.follow(arg.guid, callback_parsed=self.__public_feed_callback_parsed)
 
     def __find_and_bind(self, search_text):
@@ -129,19 +130,20 @@ class DemoThing(ThingRunner):
         if power is None:
             logger.debug('Power not found, ignoring')
 
-        if temp is not None and power is not None:
+        if temp is not None and power is not None:  # it's an HVAC
             logger.info('HVAC %.d: Temperature: %.d C, Power: %.d', hvac_id, temp, power)
-
-        # Find a number in the feed data
-        number = None
-        for value in args[KEY_PARSED].filter_by(types=[Datatypes.INTEGER, Datatypes.DOUBLE]):
-            logger.debug('number found in value %s', value.label)
-            number = value.value
-            break
-        if number is None:
-            logger.debug('Number not found, ignoring')
         else:
-            logger.info('Number found in remote feed: %d', number)
+            # Find a number in the feed data
+            number = None
+            for value in args[KEY_PARSED].filter_by(
+                    types=[Datatypes.DOUBLE, Datatypes.INTEGER, Datatypes.INT, Datatypes.DECIMAL]):
+                logger.debug('Number found %s', value.label)
+                number = value.value
+                break
+            if number is None:
+                logger.debug('Number not found, ignoring')
+            else:
+                logger.info('External temperature: %d', number)
 
 
 def in_background(runner):

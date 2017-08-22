@@ -7,6 +7,6 @@ These files are for use in conjunction with the ISC2 training course.  To regist
 To clone this repo and get the correct version of the submodule
 
 ```bash
-git clone --recursive git@github.com:Iotic-Labs/isc2_training.git isc2_training
+git clone --recursive https://github.com/Iotic-Labs/isc2_training.git isc2_training
 
 ```
